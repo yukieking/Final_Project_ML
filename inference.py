@@ -94,8 +94,6 @@ def generate_csv():
 
     print(f"Starting inference -> {OUTPUT_FILE}")
     
-    # 使用 QUOTE_MINIMAL：这是最标准的 CSV 格式
-    # 只有当 Explanation 里包含逗号时，它才会自动加上引号，和 Sample 文件逻辑一致。
     with open(OUTPUT_FILE, "w", newline="", encoding='utf-8') as f:
         writer = csv.writer(f, quoting=csv.QUOTE_MINIMAL)
         writer.writerow(["id", "answer", "explanation"])

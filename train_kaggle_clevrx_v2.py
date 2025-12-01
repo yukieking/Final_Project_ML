@@ -8,17 +8,17 @@ from peft import LoraConfig, get_peft_model, TaskType
 from tqdm import tqdm
 import csv
 
-# ================= 配置参数 (升级版) =================
+# ================= 配置参数 =================
 MODEL_ID = "Qwen/Qwen2-VL-2B-Instruct"
 TRAIN_CSV = "custom_dataset/train_labels.csv"
 IMAGE_ROOT_TRAIN = "custom_dataset/train/"
 MAX_LENGTH = 512
 BATCH_SIZE = 4
-EPOCHS = 5            # 设置稍大一点，靠早停来控制
-LEARNING_RATE = 2e-4  # 初始学习率稍微调大一点点，配合 Scheduler
-LORA_RANK = 32        # 【提分关键】从 8 提升到 32
-LORA_ALPHA = 64       # Rank * 2
-PATIENCE = 2          # 早停忍耐度：如果 2 个 Epoch 没提升就停
+EPOCHS = 5            
+LEARNING_RATE = 2e-4  
+LORA_RANK = 32        
+LORA_ALPHA = 64       
+PATIENCE = 2          
 # ====================================================
 
 # ================= 手动工具函数 (防止报错) =================
@@ -191,9 +191,9 @@ if __name__ == "__main__":
         
         optimizer = torch.optim.AdamW(model.parameters(), lr=LEARNING_RATE)
         
-        # 【提分关键】定义学习率调度器
+        # 定义学习率调度器
         num_training_steps = len(train_loader) * EPOCHS
-        num_warmup_steps = int(0.1 * num_training_steps) # 10% 的步数用于预热
+        num_warmup_steps = int(0.1 * num_training_steps) 
         scheduler = get_cosine_schedule_with_warmup(
             optimizer, 
             num_warmup_steps=num_warmup_steps, 
@@ -210,20 +210,19 @@ if __name__ == "__main__":
             
             loss, acc = train(model, train_loader, optimizer, scheduler, device)
             
-            # 策略：只要 Acc 创新高，就保存
             if acc > best_acc:
                 best_acc = acc
                 patience_counter = 0 # 重置计数器
-                print(f"🔥 发现新高分 (Acc: {best_acc:.4f})！保存模型到 '{best_model_path}'...")
+                print(f"发现新高分 (Acc: {best_acc:.4f})！保存模型到 '{best_model_path}'...")
                 model.save_pretrained(best_model_path)
                 processor.save_pretrained(best_model_path)
             else:
                 patience_counter += 1
-                print(f"⚠️ 性能未提升 (Best: {best_acc:.4f}). 耐心值: {patience_counter}/{PATIENCE}")
+                print(f"性能未提升 (Best: {best_acc:.4f}). 耐心值: {patience_counter}/{PATIENCE}")
             
             # 早停检查
             if patience_counter >= PATIENCE:
-                print(f"🛑 触发早停机制！在 Epoch {epoch+1} 停止训练。")
+                print(f"触发早停机制！在 Epoch {epoch+1} 停止训练。")
                 break
             
         print(f"\nTraining Finished! 最佳模型已保存在: {best_model_path}")
